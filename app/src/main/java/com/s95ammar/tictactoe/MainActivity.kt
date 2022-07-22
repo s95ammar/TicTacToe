@@ -3,12 +3,12 @@ package com.s95ammar.tictactoe
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.s95ammar.tictactoe.adapter.TicTacToeAdapter
-import com.s95ammar.tictactoe.data.TicTacToeBoard
-import com.s95ammar.tictactoe.data.TicTacToePlayer
-import com.s95ammar.tictactoe.data.TicTacToeViewType
+import com.s95ammar.tictactoe.data.*
 import com.s95ammar.tictactoe.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
@@ -29,32 +29,57 @@ class MainActivity : AppCompatActivity() {
         layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 return when (adapter.getItemViewType(position)) {
-                    TicTacToeViewType.CurrentPlayer.VIEW_TYPE -> 3
-                    else -> 1
+                    TicTacToeViewType.Square.VIEW_TYPE -> 1
+                    else -> 3
                 }
             }
         }
         binding.gameRecyclerView.layoutManager = layoutManager
 
-        // TODO: add flowOnLifecycle
         lifecycleScope.launch {
-            viewModel.gameViewState.collect { gameViewState ->
+            viewModel.gameViewState.flowWithLifecycle(lifecycle).collect { gameViewState ->
                 gameViewState?.let {
-                    submitList(getTicTacToeAdapterList(gameViewState.currentPlayer, gameViewState.board))
+                    adapter.submitList(getTicTacToeAdapterList(gameViewState.currentPlayer, gameViewState.board))
                 }
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.uiEventFlow.flowWithLifecycle(lifecycle).collect { event ->
+                handleUiEvent(event)
             }
         }
     }
 
-    private fun submitList(list: List<TicTacToeViewType>) {
-        adapter.submitList(list)
+    private fun handleUiEvent(uiEvent: GameUiEvent) {
+        when (uiEvent) {
+            is GameUiEvent.ShowGameEndDialog -> showWinningPlayerDialog(uiEvent.gameResultDetails)
+            // other events would be handled here
+        }
     }
 
-    private fun getTicTacToeAdapterList(playerTurn: TicTacToePlayer, board: TicTacToeBoard): List<TicTacToeViewType> {
+    private fun getTicTacToeAdapterList(playerTurn: TicTacToePlayer, board: TicTacToeSquares): List<TicTacToeViewType> {
         return buildList {
             add(TicTacToeViewType.CurrentPlayer(playerTurn))
-            addAll(board.flatten().map { TicTacToeViewType.Square(it) })
+            addAll(
+                board.toList().map { (position, square) -> TicTacToeViewType.Square(position, square) }
+                    .sortedWith(compareBy({it.position.row}, {it.position.column}))
+            )
         }
+    }
+
+    private fun showWinningPlayerDialog(gameResultDetails: GameResultDetails) {
+        val title = getString(gameResultDetails.winner?.let { R.string.player_won_title } ?: R.string.draw_title)
+        val message = if (gameResultDetails.winner != null)
+            getString(R.string.format_player_won_message, gameResultDetails.winner.name)
+        else
+            getString(R.string.draw_message)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(R.string.restart) { _, _ -> viewModel.restart() }
+            .setNegativeButton(R.string.cancel) { _, _, -> }
+            .show()
     }
 
 }

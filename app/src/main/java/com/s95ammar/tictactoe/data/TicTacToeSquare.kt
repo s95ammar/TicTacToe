@@ -4,7 +4,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import java.util.*
 
-typealias TicTacToeBoard = List<List<TicTacToeSquare>>
+typealias TicTacToeSquares = Map<SquarePosition, TicTacToeSquare>
 
 sealed class TicTacToeSquare(open val id: UUID = UUID.randomUUID()) : Parcelable {
 

@@ -4,5 +4,10 @@
     <string name="square_value_x">X</string>
     <string name="square_value_O">O</string>
     <string name="format_player_turn">%s\'s turn</string>
-
+    <string name="draw_title">We have a draw!</string>
+    <string name="player_won_title">We have a winner!</string>
+    <string name="format_player_won_message">%s has won the game!</string>
+    <string name="draw_message">The game has ended in a draw!</string>
+    <string name="restart">Restart</string>
+    <string name="cancel">Cancel</string>
 </resources>

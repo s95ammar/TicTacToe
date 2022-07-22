@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.s95ammar.tictactoe.R
+import com.s95ammar.tictactoe.data.SquarePosition
 import com.s95ammar.tictactoe.data.TicTacToePlayer
 import com.s95ammar.tictactoe.data.TicTacToeSquare
 import com.s95ammar.tictactoe.data.TicTacToeViewType
@@ -14,7 +15,7 @@ import com.s95ammar.tictactoe.databinding.ItemCurrentPlayerTurnBinding
 import com.s95ammar.tictactoe.databinding.ItemSquareBinding
 
 class TicTacToeAdapter(
-    private val onSquareClick: (TicTacToeSquare) -> Unit
+    private val onSquareClick: (SquarePosition, TicTacToeSquare) -> Unit
 ) : ListAdapter<TicTacToeViewType, RecyclerView.ViewHolder>(TicTacToeDiffUtil()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -40,7 +41,7 @@ class TicTacToeAdapter(
                     (it as? TicTacToeViewType.CurrentPlayer)?.item?.let { item -> holder.bind(item) }
                 }
                 is SquareViewHolder -> {
-                    (it as? TicTacToeViewType.Square)?.item?.let { item -> holder.bind(item) }
+                    (it as? TicTacToeViewType.Square)?.let { square -> holder.bind(square.position, square.item) }
                 }
                 else -> {}
             }
@@ -48,10 +49,7 @@ class TicTacToeAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)) {
-            is TicTacToeViewType.CurrentPlayer -> TicTacToeViewType.CurrentPlayer.VIEW_TYPE
-            is TicTacToeViewType.Square -> TicTacToeViewType.Square.VIEW_TYPE
-        }
+        return getItem(position).viewType
     }
 
     class CurrentPlayerViewHolder(private val binding: ItemCurrentPlayerTurnBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -63,11 +61,11 @@ class TicTacToeAdapter(
 
     class SquareViewHolder(
         private val binding: ItemSquareBinding,
-        val onSquareClick: (TicTacToeSquare) -> Unit
+        val onSquareClick: (SquarePosition, TicTacToeSquare) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: TicTacToeSquare) {
-            itemView.setOnClickListener { onSquareClick(item) }
+        fun bind(position: SquarePosition, item: TicTacToeSquare) {
+            itemView.setOnClickListener { onSquareClick(position, item) }
             binding.squareValueTextView.text =
                 when (item) {
                     is TicTacToeSquare.Empty -> null

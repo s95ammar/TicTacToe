@@ -8,10 +8,9 @@ sealed class TicTacToeViewType(val viewType: Int) {
             const val VIEW_TYPE = R.layout.item_current_player_turn
         }
     }
-    data class Square(val item : TicTacToeSquare) : TicTacToeViewType(VIEW_TYPE) {
+    data class Square(val position: SquarePosition, val item : TicTacToeSquare) : TicTacToeViewType(VIEW_TYPE) {
         companion object {
             const val VIEW_TYPE = R.layout.item_square
         }
-
     }
 }

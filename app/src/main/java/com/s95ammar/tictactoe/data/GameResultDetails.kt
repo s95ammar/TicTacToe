@@ -1,8 +1,12 @@
 package com.s95ammar.tictactoe.data
 
+import android.os.Parcelable
+import androidx.annotation.Nullable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class GameResultDetails(
-    val winner: String? = null
-) {
-    val isGameOver
-        get() = !winner.isNullOrEmpty()
-}
+    val isGameOver: Boolean,
+    @Nullable
+    val winner: TicTacToePlayer? = null
+) : Parcelable
