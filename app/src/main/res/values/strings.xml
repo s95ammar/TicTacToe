@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TicTacToe</string>
+
+    <string name="square_value_x">X</string>
+    <string name="square_value_O">O</string>
+    <string name="format_player_turn">%s\'s turn</string>
+
+</resources>
