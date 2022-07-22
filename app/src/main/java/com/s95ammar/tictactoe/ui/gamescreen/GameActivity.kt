@@ -1,4 +1,4 @@
-package com.s95ammar.tictactoe
+package com.s95ammar.tictactoe.ui.gamescreen
 
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -7,15 +7,21 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.s95ammar.tictactoe.adapter.TicTacToeAdapter
-import com.s95ammar.tictactoe.data.*
+import com.s95ammar.tictactoe.R
 import com.s95ammar.tictactoe.databinding.ActivityMainBinding
+import com.s95ammar.tictactoe.ui.gamescreen.adapter.GameAdapter
+import com.s95ammar.tictactoe.ui.gamescreen.adapter.GameViewType
+import com.s95ammar.tictactoe.ui.gamescreen.data.GameResultDetails
+import com.s95ammar.tictactoe.ui.gamescreen.data.GameUiEvent
+import com.s95ammar.tictactoe.ui.gamescreen.data.TicTacToePlayer
+import com.s95ammar.tictactoe.util.SQUARES_IN_A_SIDE
+import com.s95ammar.tictactoe.util.TicTacToeSquares
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class GameActivity : AppCompatActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
-    private val adapter by lazy { TicTacToeAdapter(viewModel::onSquareClick) }
+    private val viewModel: GameViewModel by viewModels()
+    private val adapter by lazy { GameAdapter(viewModel::onSquareClick) }
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,12 +31,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.gameRecyclerView.adapter = adapter
         binding.gameRecyclerView.itemAnimator = null
-        val layoutManager = GridLayoutManager(this, 3)
+        val layoutManager = GridLayoutManager(this, SQUARES_IN_A_SIDE)
         layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 return when (adapter.getItemViewType(position)) {
-                    TicTacToeViewType.Square.VIEW_TYPE -> 1
-                    else -> 3
+                    GameViewType.Square.VIEW_TYPE -> 1
+                    else -> SQUARES_IN_A_SIDE
                 }
             }
         }
@@ -52,22 +58,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleUiEvent(uiEvent: GameUiEvent) {
         when (uiEvent) {
-            is GameUiEvent.ShowGameEndDialog -> showWinningPlayerDialog(uiEvent.gameResultDetails)
+            is GameUiEvent.ShowGameEndDialog -> showGameEndDialog(uiEvent.gameResultDetails)
             // other events would be handled here
         }
     }
 
-    private fun getTicTacToeAdapterList(playerTurn: TicTacToePlayer, board: TicTacToeSquares): List<TicTacToeViewType> {
+    private fun getTicTacToeAdapterList(playerTurn: TicTacToePlayer, board: TicTacToeSquares): List<GameViewType> {
         return buildList {
-            add(TicTacToeViewType.CurrentPlayer(playerTurn))
+            add(GameViewType.CurrentPlayer(playerTurn))
             addAll(
-                board.toList().map { (position, square) -> TicTacToeViewType.Square(position, square) }
+                board.toList().map { (position, square) -> GameViewType.Square(position, square) }
                     .sortedWith(compareBy({it.position.row}, {it.position.column}))
             )
         }
     }
 
-    private fun showWinningPlayerDialog(gameResultDetails: GameResultDetails) {
+    private fun showGameEndDialog(gameResultDetails: GameResultDetails) {
         val title = getString(gameResultDetails.winner?.let { R.string.player_won_title } ?: R.string.draw_title)
         val message = if (gameResultDetails.winner != null)
             getString(R.string.format_player_won_message, gameResultDetails.winner.name)

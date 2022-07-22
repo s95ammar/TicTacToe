@@ -1,4 +1,4 @@
-package com.s95ammar.tictactoe.adapter
+package com.s95ammar.tictactoe.ui.gamescreen.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,25 +6,24 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.s95ammar.tictactoe.R
-import com.s95ammar.tictactoe.data.SquarePosition
-import com.s95ammar.tictactoe.data.TicTacToePlayer
-import com.s95ammar.tictactoe.data.TicTacToeSquare
-import com.s95ammar.tictactoe.data.TicTacToeViewType
 import com.s95ammar.tictactoe.databinding.EmptyLayoutBinding
 import com.s95ammar.tictactoe.databinding.ItemCurrentPlayerTurnBinding
 import com.s95ammar.tictactoe.databinding.ItemSquareBinding
+import com.s95ammar.tictactoe.ui.gamescreen.data.SquarePosition
+import com.s95ammar.tictactoe.ui.gamescreen.data.TicTacToePlayer
+import com.s95ammar.tictactoe.ui.gamescreen.data.TicTacToeSquare
 
-class TicTacToeAdapter(
+class GameAdapter(
     private val onSquareClick: (SquarePosition, TicTacToeSquare) -> Unit
-) : ListAdapter<TicTacToeViewType, RecyclerView.ViewHolder>(TicTacToeDiffUtil()) {
+) : ListAdapter<GameViewType, RecyclerView.ViewHolder>(TicTacToeDiffUtil()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            TicTacToeViewType.CurrentPlayer.VIEW_TYPE -> CurrentPlayerViewHolder(
+            GameViewType.CurrentPlayer.VIEW_TYPE -> CurrentPlayerViewHolder(
                 ItemCurrentPlayerTurnBinding.inflate(inflater, parent, false)
             )
-            TicTacToeViewType.Square.VIEW_TYPE -> SquareViewHolder(
+            GameViewType.Square.VIEW_TYPE -> SquareViewHolder(
                 ItemSquareBinding.inflate(inflater, parent, false),
                 onSquareClick
             )
@@ -38,10 +37,10 @@ class TicTacToeAdapter(
         getItem(position)?.let {
             when (holder) {
                 is CurrentPlayerViewHolder -> {
-                    (it as? TicTacToeViewType.CurrentPlayer)?.item?.let { item -> holder.bind(item) }
+                    (it as? GameViewType.CurrentPlayer)?.value?.let { item -> holder.bind(item) }
                 }
                 is SquareViewHolder -> {
-                    (it as? TicTacToeViewType.Square)?.let { square -> holder.bind(square.position, square.item) }
+                    (it as? GameViewType.Square)?.let { square -> holder.bind(square.position, square.value) }
                 }
                 else -> {}
             }
@@ -66,32 +65,31 @@ class TicTacToeAdapter(
 
         fun bind(position: SquarePosition, item: TicTacToeSquare) {
             itemView.setOnClickListener { onSquareClick(position, item) }
-            binding.squareValueTextView.text =
-                when (item) {
-                    is TicTacToeSquare.Empty -> null
-                    is TicTacToeSquare.X -> itemView.resources.getString(R.string.square_value_x)
-                    is TicTacToeSquare.O -> itemView.resources.getString(R.string.square_value_O)
-                }
+            binding.squareValueTextView.text = when (item) {
+                is TicTacToeSquare.Empty -> null
+                is TicTacToeSquare.X -> itemView.resources.getString(R.string.square_value_x)
+                is TicTacToeSquare.O -> itemView.resources.getString(R.string.square_value_O)
+            }
         }
     }
 
     class EmptyViewHolder(private val binding: EmptyLayoutBinding) : RecyclerView.ViewHolder(binding.root)
 
-    class TicTacToeDiffUtil : DiffUtil.ItemCallback<TicTacToeViewType>() {
-        override fun areItemsTheSame(oldItem: TicTacToeViewType, newItem: TicTacToeViewType): Boolean {
+    class TicTacToeDiffUtil : DiffUtil.ItemCallback<GameViewType>() {
+        override fun areItemsTheSame(oldItem: GameViewType, newItem: GameViewType): Boolean {
             return when (oldItem) {
-                is TicTacToeViewType.CurrentPlayer -> newItem is TicTacToeViewType.CurrentPlayer
-                is TicTacToeViewType.Square -> oldItem.item.id == (newItem as? TicTacToeViewType.Square)?.item?.id
+                is GameViewType.CurrentPlayer -> newItem is GameViewType.CurrentPlayer
+                is GameViewType.Square -> oldItem.position == (newItem as? GameViewType.Square)?.position
             }
         }
 
-        override fun areContentsTheSame(oldItem: TicTacToeViewType, newItem: TicTacToeViewType): Boolean {
+        override fun areContentsTheSame(oldItem: GameViewType, newItem: GameViewType): Boolean {
             return when (oldItem) {
-                is TicTacToeViewType.CurrentPlayer -> {
-                    newItem is TicTacToeViewType.CurrentPlayer && oldItem.item::class == newItem.item::class
+                is GameViewType.CurrentPlayer -> {
+                    newItem is GameViewType.CurrentPlayer && oldItem.value == newItem.value
                 }
-                is TicTacToeViewType.Square -> {
-                    newItem is TicTacToeViewType.Square && oldItem.item::class == newItem.item::class
+                is GameViewType.Square -> {
+                    newItem is GameViewType.Square && oldItem.value == newItem.value
                 }
             }
         }

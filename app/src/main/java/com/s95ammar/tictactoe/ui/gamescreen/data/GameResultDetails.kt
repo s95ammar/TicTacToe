@@ -1,4 +1,4 @@
-package com.s95ammar.tictactoe.data
+package com.s95ammar.tictactoe.ui.gamescreen.data
 
 import android.os.Parcelable
 import androidx.annotation.Nullable

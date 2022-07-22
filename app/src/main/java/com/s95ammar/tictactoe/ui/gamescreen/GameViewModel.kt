@@ -1,21 +1,22 @@
-package com.s95ammar.tictactoe
+package com.s95ammar.tictactoe.ui.gamescreen
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.s95ammar.tictactoe.data.*
+import com.s95ammar.tictactoe.ui.gamescreen.data.*
+import com.s95ammar.tictactoe.util.SQUARES_IN_A_SIDE
+import com.s95ammar.tictactoe.util.TicTacToeSquares
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
     companion object {
-        private const val SQUARES_IN_A_SIDE = 3
+        private const val KEY_PLAYER_X = "KEY_PLAYER_X"
+        private const val KEY_PLAYER_O = "KEY_PLAYER_O"
         private const val KEY_GAME_RESULT_DETAILS = "KEY_GAME_RESULT_DETAILS"
         private const val KEY_CURRENT_PLAYER_TURN = "KEY_CURRENT_PLAYER_TURN"
         private const val KEY_BOARD_VALUE = "KEY_BOARD_VALUE"
-        private const val KEY_PLAYER_X = "KEY_PLAYER_X"
-        private const val KEY_PLAYER_O = "KEY_PLAYER_O"
     }
 
     private val playerX = TicTacToePlayer.X().also {
@@ -82,8 +83,8 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     private fun getUpdatedBoard(clickedSquarePosition: SquarePosition): TicTacToeSquares {
         return board.value.toMutableMap().apply {
             val newSquare = when (currentPlayer.value) {
-                is TicTacToePlayer.X -> TicTacToeSquare.X()
-                is TicTacToePlayer.O -> TicTacToeSquare.O()
+                is TicTacToePlayer.X -> TicTacToeSquare.X
+                is TicTacToePlayer.O -> TicTacToeSquare.O
             }
             put(clickedSquarePosition, newSquare)
         }
@@ -99,7 +100,7 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     private fun generateEmptyBoard(): TicTacToeSquares = buildMap {
         repeat(SQUARES_IN_A_SIDE) { rowNumber ->
             repeat(SQUARES_IN_A_SIDE) { columnNumber ->
-                put(SquarePosition(rowNumber, columnNumber), TicTacToeSquare.Empty())
+                put(SquarePosition(rowNumber, columnNumber), TicTacToeSquare.Empty)
             }
         }
     }
@@ -124,10 +125,10 @@ class MainViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
         return false
     }
 
-    private fun isWin(winningSquares: TicTacToeSquares): Boolean {
+    private fun isWin(squaresToWin: TicTacToeSquares): Boolean {
         return when (currentPlayer.value) {
-            is TicTacToePlayer.X -> winningSquares.all { it.value is TicTacToeSquare.X }
-            is TicTacToePlayer.O -> winningSquares.all { it.value is TicTacToeSquare.O }
+            is TicTacToePlayer.X -> squaresToWin.all { it.value is TicTacToeSquare.X }
+            is TicTacToePlayer.O -> squaresToWin.all { it.value is TicTacToeSquare.O }
         }
     }
 

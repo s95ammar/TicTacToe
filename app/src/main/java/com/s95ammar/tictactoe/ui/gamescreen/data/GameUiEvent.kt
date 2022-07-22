@@ -1,4 +1,4 @@
-package com.s95ammar.tictactoe.data
+package com.s95ammar.tictactoe.ui.gamescreen.data
 
 sealed class GameUiEvent {
     data class ShowGameEndDialog(val gameResultDetails: GameResultDetails): GameUiEvent()
