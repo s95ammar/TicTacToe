@@ -19,12 +19,14 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
         private const val KEY_BOARD_VALUE = "KEY_BOARD_VALUE"
     }
 
-    private val playerX = TicTacToePlayer.X().also {
-        savedStateHandle.set<TicTacToePlayer>(KEY_PLAYER_X, it)
-    }
-    private val playerO = TicTacToePlayer.O().also {
-        savedStateHandle.set<TicTacToePlayer>(KEY_PLAYER_O, it)
-    }
+    private val playerX
+        get() = savedStateHandle.playerX ?: TicTacToePlayer.X().also {
+            savedStateHandle.set<TicTacToePlayer>(KEY_PLAYER_X, it)
+        }
+    private val playerO
+        get() = savedStateHandle.playerO ?: TicTacToePlayer.O().also {
+            savedStateHandle.set<TicTacToePlayer>(KEY_PLAYER_O, it)
+        }
     private val gameResultDetails = savedStateHandle.getStateFlow(
         KEY_GAME_RESULT_DETAILS,
         GameResultDetails(isGameOver = false)
@@ -57,14 +59,14 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
             return@launch
         }
         if (clickedSquare is TicTacToeSquare.Empty) {
-            savedStateHandle[KEY_BOARD_VALUE] = getUpdatedBoard(clickedSquarePosition)
+            savedStateHandle.boardValue = getUpdatedBoard(clickedSquarePosition)
             when {
                 isGameWon(clickedSquarePosition) -> {
-                    savedStateHandle[KEY_GAME_RESULT_DETAILS] = GameResultDetails(isGameOver = true, winner = currentPlayer.value)
+                    savedStateHandle.gameResultDetails = GameResultDetails(isGameOver = true, winner = currentPlayer.value)
                     _uiEventFlow.emit(GameUiEvent.ShowGameEndDialog(gameResultDetails.value))
                 }
                 board.value.none { it.value is TicTacToeSquare.Empty } -> {
-                    savedStateHandle[KEY_GAME_RESULT_DETAILS] = GameResultDetails(isGameOver = true, winner = null)
+                    savedStateHandle.gameResultDetails = GameResultDetails(isGameOver = true, winner = null)
                     _uiEventFlow.emit(GameUiEvent.ShowGameEndDialog(gameResultDetails.value))
                 }
                 else -> {
@@ -75,9 +77,9 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
     }
 
     fun restart() {
-        savedStateHandle[KEY_GAME_RESULT_DETAILS] = GameResultDetails(isGameOver = false, winner = null)
-        savedStateHandle[KEY_CURRENT_PLAYER_TURN] = playerX
-        savedStateHandle[KEY_BOARD_VALUE] = generateEmptyBoard()
+        savedStateHandle.gameResultDetails = GameResultDetails(isGameOver = false, winner = null)
+        savedStateHandle.currentPlayerTurn = playerX
+        savedStateHandle.boardValue = generateEmptyBoard()
     }
 
     private fun getUpdatedBoard(clickedSquarePosition: SquarePosition): TicTacToeSquares {
@@ -92,8 +94,8 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
 
     private fun switchTurns() {
         when (currentPlayer.value) {
-            is TicTacToePlayer.X -> savedStateHandle[KEY_CURRENT_PLAYER_TURN] = playerO
-            is TicTacToePlayer.O -> savedStateHandle[KEY_CURRENT_PLAYER_TURN] = playerX
+            is TicTacToePlayer.X -> savedStateHandle.currentPlayerTurn = playerO
+            is TicTacToePlayer.O -> savedStateHandle.currentPlayerTurn = playerX
         }
     }
 
@@ -113,16 +115,22 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
         val isVerticalWin = isWin(board.value.filter { it.key.column == clickedSquarePosition.column })
         if (isVerticalWin) return true
 
-        val isDiagonalWin1 = isWin(board.value.filter { it.key.row == it.key.column })
+        val isDiagonalWin1 = isSquareOnDiagonal1(clickedSquarePosition) && isWin(board.value.filter { isSquareOnDiagonal1(it.key) })
         if (isDiagonalWin1) return true
 
-        val isDiagonalWin2 = isWin(board.value.filter {
-            val lastIndex = SQUARES_IN_A_SIDE - 1
-            it.key.row == lastIndex - it.key.column
-        })
+        val isDiagonalWin2 = isSquareOnDiagonal2(clickedSquarePosition) && isWin(board.value.filter { isSquareOnDiagonal2(it.key) })
         if (isDiagonalWin2) return true
 
         return false
+    }
+
+    private fun isSquareOnDiagonal1(squarePosition: SquarePosition): Boolean {
+        return squarePosition.row == squarePosition.column
+    }
+
+    private fun isSquareOnDiagonal2(squarePosition: SquarePosition): Boolean {
+        val lastSquareIndex = SQUARES_IN_A_SIDE - 1
+        return squarePosition.row == lastSquareIndex - squarePosition.column
     }
 
     private fun isWin(squaresToWin: TicTacToeSquares): Boolean {
@@ -131,5 +139,35 @@ class GameViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel(
             is TicTacToePlayer.O -> squaresToWin.all { it.value is TicTacToeSquare.O }
         }
     }
+
+    private var SavedStateHandle.playerX: TicTacToePlayer?
+        get() = savedStateHandle[KEY_PLAYER_X]
+        set(value) {
+            savedStateHandle[KEY_PLAYER_X] = value
+        }
+
+    private var SavedStateHandle.playerO: TicTacToePlayer?
+        get() = savedStateHandle[KEY_PLAYER_O]
+        set(value) {
+            savedStateHandle[KEY_PLAYER_O] = value
+        }
+
+    private var SavedStateHandle.gameResultDetails: GameResultDetails?
+        get() = savedStateHandle[KEY_GAME_RESULT_DETAILS]
+        set(value) {
+            savedStateHandle[KEY_GAME_RESULT_DETAILS] = value
+        }
+
+    private var SavedStateHandle.currentPlayerTurn: TicTacToePlayer?
+        get() = savedStateHandle[KEY_CURRENT_PLAYER_TURN]
+        set(value) {
+            savedStateHandle[KEY_CURRENT_PLAYER_TURN] = value
+        }
+
+    private var SavedStateHandle.boardValue: TicTacToeSquares?
+        get() = savedStateHandle[KEY_BOARD_VALUE]
+        set(value) {
+            savedStateHandle[KEY_BOARD_VALUE] = value
+        }
 
 }

@@ -28,19 +28,7 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        binding.gameRecyclerView.adapter = adapter
-        binding.gameRecyclerView.itemAnimator = null
-        val layoutManager = GridLayoutManager(this, SQUARES_IN_A_SIDE)
-        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                return when (adapter.getItemViewType(position)) {
-                    GameViewType.Square.VIEW_TYPE -> 1
-                    else -> SQUARES_IN_A_SIDE
-                }
-            }
-        }
-        binding.gameRecyclerView.layoutManager = layoutManager
+        setUpRecyclerView()
 
         lifecycleScope.launch {
             viewModel.gameViewState.flowWithLifecycle(lifecycle).collect { gameViewState ->
@@ -54,6 +42,21 @@ class GameActivity : AppCompatActivity() {
                 handleUiEvent(event)
             }
         }
+    }
+
+    private fun setUpRecyclerView() {
+        binding.gameRecyclerView.adapter = adapter
+        binding.gameRecyclerView.itemAnimator = null
+        val layoutManager = GridLayoutManager(this, SQUARES_IN_A_SIDE)
+        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return when (adapter.getItemViewType(position)) {
+                    GameViewType.Square.VIEW_TYPE -> 1
+                    else -> SQUARES_IN_A_SIDE
+                }
+            }
+        }
+        binding.gameRecyclerView.layoutManager = layoutManager
     }
 
     private fun handleUiEvent(uiEvent: GameUiEvent) {
